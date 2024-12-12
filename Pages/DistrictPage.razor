@@ -1,0 +1,76 @@
+﻿@page "/districts"
+@inject DistrictService DistrictService
+@inject ToastService ToastService
+
+<PageTitle>Districts</PageTitle>
+
+<h3>Select State and Enter District</h3>
+
+<!-- Dropdown to select state -->
+<div>
+    <label for="state">Select State:</label>
+    <select id="state" @bind="selectedState">
+        @for (int i = 1; i <= 14; i++)
+        {
+            <option value="@i">State @i</option>
+        }
+    </select>
+</div>
+
+<!-- Input for entering district information -->
+<div>
+    <label for="district">Enter District Name:</label>
+    <input id="district" type="text" @bind="districtName" placeholder="Enter district name" />
+</div>
+
+<!-- Submit Button -->
+<div>
+    <button @onclick="HandleSubmit">Submit</button>
+</div>
+
+@if (daerahList != null && daerahList.Any())
+{
+    <h4>Districts in State @selectedState</h4>
+    <ul>
+        @foreach (var daerah in daerahList)
+        {
+            <li>@daerah.DaerahDescription (Lat: @daerah.Lat, Long: @daerah.Long)</li>
+        }
+    </ul>
+}
+else if (!string.IsNullOrEmpty(toastMessage))
+{
+    <div class="toast-notification">
+        @toastMessage
+    </div>
+}
+
+@code {
+    private int selectedState = 1; // Default state is 1
+    private string districtName = string.Empty; // Input for district name
+    private List<Daerah> daerahList;
+    private string toastMessage;
+
+    // Handle form submission
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(districtName))
+        {
+            toastMessage = "Please enter a district name.";
+            ToastService.ShowToast(toastMessage);
+            return;
+        }
+
+        // Fetch data for the selected state
+        var result = await DistrictService.GetDaerahByStateAsync(selectedState);
+        if (result.daerahList != null)
+        {
+            daerahList = result.daerahList;
+        }
+        else
+        {
+            toastMessage = result.errorMessage;
+            ToastService.ShowToast(toastMessage);
+        }
+    }
+}

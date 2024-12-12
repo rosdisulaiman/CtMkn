@@ -1,0 +1,103 @@
+﻿@page "/states"
+@inject StateService StateService
+@using Blazorise.DataGrid
+@using CtMkn.Models
+
+<h3>States</h3>
+
+@if (isLoading)
+{
+    <p>Loading states...</p>
+}
+else if (hasError)
+{
+    <p style="color: red">Error loading states: @errorMessage</p>
+}
+else if (states != null && states.Any())
+{
+<DataGrid TItem="State" Data="states" @bind-SelectedRow="selectedState" Responsive="true" Pageable="true" Filterable="true" Sortable="true">
+        <DataGridColumns>
+            <DataGridColumn TItem="State" Field="@nameof(State.Id)" Caption="Id" />
+            <DataGridColumn TItem="State" Field="@nameof(State.Lat)" Caption="Latitude" />
+            <DataGridColumn TItem="State" Field="@nameof(State.Long)" Caption="Longitude" />
+            <DataGridColumn TItem="State" Field="@nameof(State.StateAbbr)" Caption="Abbreviation" />
+            <DataGridColumn TItem="State" Field="@nameof(State.StateDescription)" Caption="Description" />
+            <DataGridColumn TItem="State" Field="@nameof(State.StateId)" Caption="State ID" />
+        </DataGridColumns>
+    </DataGrid>
+}
+else
+{
+    <p>No states available</p>
+}
+
+@* @if (isLoading)
+{
+    <p>Loading states...</p>
+}
+else if (hasError)
+{
+    <p style="color: red">Error loading states: @errorMessage</p>
+}
+else if (states != null && states.Any())
+{
+    <ul>
+        @foreach (var state in states)
+        {
+            <li>
+                <p>Id: @state.Id</p>
+                <p>Latitude: @state.Lat</p>
+                <p>Longitude: @state.Long</p>
+                <p>Abbreviation: @state.StateAbbr</p>
+                <p>Description: @state.StateDescription</p>
+                <p>State ID: @state.StateId</p>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No states available</p>
+} *@
+
+@code {
+    private List<State> states;
+    private string errorMessage;
+    private bool isLoading = true;
+    private bool hasError = false;
+    private State selectedState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            states = await StateService.GetStatesAsync();
+
+            // Debug logging to inspect the fetched states
+            Console.WriteLine($"Fetched {states.Count} states");
+            foreach (var state in states)
+            {
+                Console.WriteLine($"State: {state.StateDescription}, ID: {state.StateId}");
+            }
+
+            if (states == null || !states.Any())
+            {
+                throw new Exception("No states received from the API.");
+            }
+        }
+        catch (Exception e)
+        {
+            ShowError($"Failed to load states: {e.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowError(string message)
+    {
+        errorMessage = message;
+        hasError = true;
+    }
+}
